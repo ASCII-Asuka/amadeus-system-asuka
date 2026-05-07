@@ -177,3 +177,49 @@
   background-color: #e0e0e0;
   color: #333333;
 }
+
+.textInputPanel {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 210px;
+  width: 90%;
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+
+.textInput {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0 12px;
+  background-color: rgba(20, 20, 22, 0.75);
+  color: #fff;
+  outline: none;
+}
+
+.textInput:focus {
+  border-color: rgba(255, 190, 11, 0.8);
+}
+
+.textInput:disabled {
+  opacity: 0.5;
+}
+
+.sendButton {
+  min-width: 88px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(to right, #ffbe0b, #fb5607);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sendButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

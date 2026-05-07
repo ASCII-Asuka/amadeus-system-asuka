@@ -50,7 +50,7 @@ DEFAULT_CONCURRENCY_LIMIT = int(os.getenv("CONCURRENCY_LIMIT", "10"))
 # 设置默认的语言选项和参数
 DEFAULT_VOICE_OUTPUT_LANGUAGE = 'ja'
 DEFAULT_TEXT_OUTPUT_LANGUAGE = 'zh'
-DEFAULT_SYSTEM_PROMPT = """命运石之门(steins gate)的牧濑红莉栖(kurisu),一个天才少女,性格傲娇,不喜欢被叫克里斯蒂娜"""
+DEFAULT_SYSTEM_PROMPT = """命运石之门(steins gate)的牧濑红莉栖(kurisu),一个天才少女,不喜欢被叫克里斯蒂娜。对于未知事物的好奇心十分强烈，但是研究时不近人情与高傲的态度使得她的朋友很少。只有在亲密的朋友间才会露出真正的姿态。极其不坦率，经常被吐槽傲娇，自己对此也有自知之明。性格要强，一旦与别人展开辩论，就会狠狠地抨击对手，直到将对手彻底驳倒。从不把自己脆弱的一面展示给别人。一旦生气就会无法控制住自己的感情，做出一些无心的举动"""
 DEFAULT_USER_NAME = "用户"
 # 会话超时设置
 SESSION_TIMEOUT = timedelta(seconds=DEFAULT_TIME_LIMIT)
@@ -278,8 +278,21 @@ def echo(audio: tuple[int, np.ndarray], message: str, input_data: InputData, nex
         logging.info(f"接收到 {num_frames} 帧视频数据")
     
     prompt = "[AI主动发起对话]next Action: " + next_action
+    text_input = (input_data.text_input or "").strip() if input_data else ""
+    message_input = message.strip() if isinstance(message, str) else ""
+    is_config_update_event = message_input == "config_updated"
+    is_user_input = False
     user_id = generate_unique_user_id(session["user_name"])
-    if next_action == "":
+    if text_input:
+        prompt = text_input
+        input_data.text_input = None
+        is_user_input = True
+    elif message_input and not is_config_update_event:
+        prompt = message_input
+        is_user_input = True
+    elif is_config_update_event and next_action == "":
+        return
+    elif next_action == "":
         stt_time = time.time()  # 记录开始时间
         logging.info(f"用户 {input_data.webrtc_id} 正在执行STT")  # 记录日志
         # 使用工具函数运行异步转录函数，传入配置
@@ -289,22 +302,26 @@ def echo(audio: tuple[int, np.ndarray], message: str, input_data: InputData, nex
             logging.info("STT返回空字符串")  # 记录日志
             return  # 结束函数
         logging.info(f"STT响应: {prompt}")  # 记录转录结果
-    mem0_config = get_user_mem0_config(input_data.webrtc_id)
-    memory_client = AsyncMemoryClient(api_key=mem0_config["api_key"])
-    search_result = run_async(memory_client.search, query=prompt, user_id=user_id, limit=3)
-    logging.info(f"搜索结果: {search_result}")
-    # 确保从搜索结果中正确获取记忆
-    memories_text = "\n".join(memory["memory"] for memory in search_result)
-    logging.info(f"记忆文本: {memories_text}")
-    final_prompt = f"Relevant Memories/Facts:\n{memories_text}\n\nUser Question: {prompt}"
-    if next_action == "":
+        is_user_input = True
+    
+    # mem0_config = get_user_mem0_config(input_data.webrtc_id)
+    # memory_client = AsyncMemoryClient(api_key=mem0_config["api_key"])
+    # search_result = run_async(memory_client.search, query=prompt, user_id=user_id, limit=3)
+    # logging.info(f"搜索结果: {search_result}")
+    # # 确保从搜索结果中正确获取记忆
+    # memories_text = "\n".join(memory["memory"] for memory in search_result)
+    # logging.info(f"记忆文本: {memories_text}")
+    # final_prompt = f"Relevant Memories/Facts:\n{memories_text}\n\nUser Question: {prompt}"
+    final_prompt = prompt
+    if is_user_input:
         # 将用户的输入添加到用户消息历史
         session["messages"].append({"role": "user", "content": final_prompt})
         # 发送用户语音转文字结果到前端
         transcript_json = json.dumps({"type": "transcript", "data": f"{prompt}"})
         yield AdditionalOutputs(transcript_json)
         # 记录语音识别所用时间
-        logging.info(f"STT耗时 {time.time() - stt_time} 秒")
+        if next_action == "" and not text_input and not message_input:
+            logging.info(f"STT耗时 {time.time() - stt_time} 秒")
     # 记录LLM开始时间
     llm_time = time.time()
     # 获取用户的OpenAI客户端和AI模型
@@ -375,7 +392,7 @@ def echo(audio: tuple[int, np.ndarray], message: str, input_data: InputData, nex
     logging.info(f"LLM响应: {full_response}")  # 记录LLM响应
     
     # 保存对话记忆
-    memory_client.add(conversation_messages, user_id=user_id)
+    # memory_client.add(conversation_messages, user_id=user_id)
     logging.info(f"LLM耗时 {time.time() - llm_time} 秒")  # 记录LLM所用时间
     
     # LLM响应完成后，规划下一步行动

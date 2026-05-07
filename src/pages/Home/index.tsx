@@ -1,5 +1,5 @@
 import styles from './index.module.less'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import ParticleBackground from './components/ParticleBackground'
 import Live2dModel from '@/components/Live2dModel'
@@ -62,6 +62,7 @@ const VoiceAssistant = observer(() => {
   const [isStreaming, setIsStreaming] = useState(false);
   // 是否显示开始对话框
   const [showStartDialog, setShowStartDialog] = useState(false);
+  const [textInput, setTextInput] = useState('');
   // 从全局状态中获取Live2D模型状态
   const { live2dStore } = useStore();
 
@@ -470,6 +471,44 @@ const VoiceAssistant = observer(() => {
     toggleMicrophone();
   }, [toggleMicrophone]);
 
+  const handleTextInputSend = useCallback(() => {
+    const prompt = textInput.trim();
+    if (!prompt || !webrtcId || !isConnected || !isMicrophoneMuted) return;
+
+    setLatestAiMessage('');
+    setIsLoading(true);
+    setIsSpeaking(false);
+
+    fetch(`${API_BASE_URL}/text-input`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        webrtc_id: webrtcId,
+        text: prompt
+      }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data?.status === 'success') {
+          setTextInput('');
+          return;
+        }
+        setIsLoading(false);
+      })
+      .catch(error => {
+        console.error('文本输入发送失败:', error);
+        setIsLoading(false);
+      });
+  }, [textInput, webrtcId, isConnected, isMicrophoneMuted]);
+
+  const handleTextInputKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleTextInputSend();
+    }
+  }, [handleTextInputSend]);
+
   return (
     <>
       {/* 粒子背景效果 */}
@@ -511,6 +550,27 @@ const VoiceAssistant = observer(() => {
           )}
         </div>
       </div>
+
+      {isConnected && isMicrophoneMuted && (
+        <div className={styles.textInputPanel}>
+          <input
+            className={styles.textInput}
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            onKeyDown={handleTextInputKeyDown}
+            placeholder={t('dialog.textInputPlaceholder')}
+            disabled={isLoading}
+          />
+          <button
+            className={styles.sendButton}
+            type="button"
+            onClick={handleTextInputSend}
+            disabled={isLoading || !textInput.trim()}
+          >
+            {t('dialog.send')}
+          </button>
+        </div>
+      )}
       
       {/* 工具栏，提供各种控制按钮 */}
       <Toolbar

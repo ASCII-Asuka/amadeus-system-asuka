@@ -28,6 +28,7 @@ class InputData(BaseModel):
     mem0_api_key: Optional[str] = None
     next_action: Optional[str] = None
     is_camera_on: Optional[bool] = False  # 添加摄像头状态字段
+    text_input: Optional[str] = None
 
 # 摄像头状态请求模型
 class CameraStateRequest(BaseModel):
@@ -50,6 +51,10 @@ class BuiltinServiceRequest(BaseModel):
     system_prompt: Optional[str] = None
     user_name: Optional[str] = None
     max_context_length: Optional[int] = None
+
+class TextInputRequest(BaseModel):
+    webrtc_id: str
+    text: str
 
 # 创建一个字典来存储每个用户的配置
 user_configs = {}
@@ -142,7 +147,6 @@ async def input_hook(data: InputData):
     
     # 使用 set_input 将配置传递给 Stream 对象
     # 这样修改不会改变使用方式，但确保配置会被正确处理
-    stream.set_input(data.webrtc_id, "config_updated", data)
     return {"status": "success"}
 
 # 添加设置服务请求的接口
@@ -202,6 +206,23 @@ async def ai_trigger_reset(data: InputData):
     config = get_user_config(data.webrtc_id)
     stream.set_input(data.webrtc_id, "config_updated", config, "")
     return {"status": "success", "message": "reset请求已接收"}
+
+@router.post("/text-input")
+async def text_input(data: TextInputRequest):
+    logging.info(f"接收到用户 {data.webrtc_id} 的文本输入请求")
+    prompt = data.text.strip()
+    if not prompt:
+        return {"status": "ignored", "message": "文本为空"}
+
+    config = get_user_config(data.webrtc_id)
+    if not config:
+        config = InputData(webrtc_id=data.webrtc_id)
+        user_configs[data.webrtc_id] = config
+
+    config.text_input = prompt
+    stream.set_input(data.webrtc_id, "config_updated", config, "")
+    cast(ReplyOnPause, stream.handlers[data.webrtc_id]).trigger_response()
+    return {"status": "success", "message": "文本输入已接收"}
 
 # 简化：控制摄像头状态的接口
 @router.post("/camera-state")

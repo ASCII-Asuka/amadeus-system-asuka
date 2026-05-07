@@ -109,13 +109,16 @@
     "startConversation": "Start Conversation",
     "connecting2": "Connecting...",
     "listening": "Listening...",
-    "waiting": "Waiting..."
+    "waiting": "Waiting...",
+    "textInputPlaceholder": "Type your message to AI",
+    "send": "Send"
   },
   "history": {
     "title": "Chat History",
     "clear": "Clear History",
     "user": "User",
-    "ai": "AI"
+    "ai": "AI",
+    "latest": "Latest Message"
   },
   "sections": {
     "llmConfig": "LLM Configuration",

@@ -2,11 +2,14 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding-bottom: 2rem;
 }
 
 .messageWrapper {
   display: flex;
   width: 100%;
+  gap: 0.75rem;
+  align-items: flex-start;
   
   &.userMessageWrapper {
     justify-content: flex-end;
@@ -17,35 +20,79 @@
   }
 }
 
+.avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: hsl(var(--muted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: hsl(var(--muted-foreground));
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  
+  &.userAvatar {
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+  }
+}
+
+.messageContentWrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.nameLabel {
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+  color: hsl(var(--muted-foreground));
+  padding: 0 0.25rem;
+}
+
+.userMessageWrapper .nameLabel {
+  text-align: right;
+}
+
 .message {
-  max-width: 80%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 1rem;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   
   &.userMessage {
     background: hsl(var(--primary));
     color: hsl(var(--primary-foreground));
-    border-bottom-right-radius: 0.25rem;
+    border-top-right-radius: 0.25rem;
   }
   
   &.assistantMessage {
-    background: hsl(var(--muted));
-    color: hsl(var(--muted-foreground));
-    border-bottom-left-radius: 0.25rem;
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-top-left-radius: 0.25rem;
+    border: 1px solid hsl(var(--border) / 0.5);
   }
 }
 
 .messageContent {
   white-space: pre-wrap;
   word-break: break-word;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .timestamp {
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-  opacity: 0.8;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  opacity: 0.7;
   text-align: right;
-} 
+}
+
+.userMessage .timestamp {
+  color: hsl(var(--primary-foreground) / 0.8);
+}
+
+.assistantMessage .timestamp {
+  color: hsl(var(--muted-foreground));
+}

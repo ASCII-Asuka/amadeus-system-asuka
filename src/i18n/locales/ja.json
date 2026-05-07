@@ -109,13 +109,16 @@
     "startConversation": "会話を開始",
     "connecting2": "接続中...",
     "listening": "聞いています...",
-    "waiting": "待機中..."
+    "waiting": "待機中...",
+    "textInputPlaceholder": "AIに送信する内容を入力",
+    "send": "送信"
   },
   "history": {
-    "title": "会話履歴",
+    "title": "履歴",
     "clear": "履歴をクリア",
     "user": "ユーザー",
-    "ai": "AI"
+    "ai": "AI",
+    "latest": "最新メッセージ"
   },
   "sections": {
     "llmConfig": "LLM設定",

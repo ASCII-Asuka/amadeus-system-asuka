@@ -49,6 +49,7 @@ def ai_stream(client, messages, model=None, max_tokens=200, max_context_length=N
         messages=trimmed_messages,  # 裁剪后的消息历史
         max_tokens=max_tokens,  # 最大生成的token数
         stream=True,  # 启用流式响应
+        timeout=60,  # 设置超时时间为60秒
     )
     
     # 处理流式响应的每个块
